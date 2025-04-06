@@ -149,7 +149,7 @@ function App() {
         </div>
       )}
       <footer className="footer">
-        <p>&copy; {new Date().getFullYear()} Movie Recommender | Developed by Harsh Raj</p>
+        <p>&copy; {new Date().getFullYear()} Movie Recommender | Crafted with ❤️ by Harsh Raj and Team</p>
       </footer>
     </div>
   );
