@@ -224,3 +224,26 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(27px);
 }
+
+.footer {
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 14px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: transparent;
+  color: var(--footer-text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.app.light .footer {
+  color: #555;
+  border-top: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+.app.dark .footer {
+  color: #aaa;
+  border-top: 1px solid #333;
+  background-color: #111;
+}

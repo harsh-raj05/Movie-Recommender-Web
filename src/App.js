@@ -148,6 +148,9 @@ function App() {
           )}
         </div>
       )}
+      <footer className="footer">
+        <p>&copy; {new Date().getFullYear()} Movie Recommender | Developed by Harsh Raj</p>
+      </footer>
     </div>
   );
 }
