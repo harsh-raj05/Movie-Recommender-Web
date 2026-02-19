@@ -6,7 +6,7 @@ function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [movies, setMovies] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
