@@ -37,48 +37,78 @@ function App() {
     fetchTrending();
   }, []);
 
+  // Trending Movies
   const fetchTrending = async () => {
-    setLoading(true);
-    const res = await axios.get(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`);
-    setMovies(res.data.results);
+    try {
+      setLoading(true);
+      const res = await axios.get(
+        `https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`
+      );
+      setMovies(res.data.results);
+    } catch (error) {
+      console.error(error);
+      setMovies([]);
+    }
     setLoading(false);
   };
 
+  // Search by Actor or Movie Name
   const fetchByQuery = async () => {
-    setLoading(true);
+    if (!query.trim()) return;
 
-    if (selectedGenre) {
+    try {
+      setLoading(true);
+
+      // Check Actor
+      const actorRes = await axios.get(
+        `https://api.themoviedb.org/3/search/person?api_key=${API_KEY}&query=${query}`
+      );
+
+      if (actorRes.data.results.length > 0) {
+        const actorId = actorRes.data.results[0].id;
+        const res = await axios.get(
+          `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_cast=${actorId}`
+        );
+        setMovies(res.data.results);
+        setLoading(false);
+        return;
+      }
+
+      // Check Movie Name
+      const movieRes = await axios.get(
+        `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`
+      );
+
+      if (movieRes.data.results.length > 0) {
+        setMovies(movieRes.data.results);
+        setLoading(false);
+        return;
+      }
+
+      setMovies([]);
+    } catch (error) {
+      console.error(error);
+      setMovies([]);
+    }
+
+    setLoading(false);
+  };
+
+  // Search by Genre
+  const fetchByGenre = async () => {
+    if (!selectedGenre) return;
+
+    try {
+      setLoading(true);
       const res = await axios.get(
         `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${selectedGenre}`
       );
       setMovies(res.data.results);
-      setLoading(false);
-      return;
+    } catch (error) {
+      console.error(error);
+      setMovies([]);
     }
 
-    const actorRes = await axios.get(
-      `https://api.themoviedb.org/3/search/person?api_key=${API_KEY}&query=${query}`
-    );
-    if (actorRes.data.results.length > 0) {
-      const actorId = actorRes.data.results[0].id;
-      const res = await axios.get(
-        `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_cast=${actorId}`
-      );
-      setMovies(res.data.results);
-      setLoading(false);
-      return;
-    }
-
-    const movieRes = await axios.get(
-      `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`
-    );
-    if (movieRes.data.results.length > 0) {
-      setMovies(movieRes.data.results);
-      setLoading(false);
-      return;
-    }
-
-    setMovies([]);
     setLoading(false);
   };
 
@@ -86,6 +116,7 @@ function App() {
     <div className={`app ${darkMode ? 'dark' : 'light'}`}>
       <h1>🎬 Movie Recommender</h1>
 
+      {/* Dark Mode Toggle */}
       <div className="toggle-switch">
         <span className="icon">{darkMode ? '🌙' : '☀️'}</span>
         <label className="switch">
@@ -98,29 +129,40 @@ function App() {
         </label>
       </div>
 
+      {/* Search Sections */}
       <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search by actor or movie name..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
 
-        <select
-          value={selectedGenre}
-          onChange={(e) => setSelectedGenre(e.target.value)}
-        >
-          <option value="">-- Genre --</option>
-          {Object.entries(genresList).map(([name, id]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </select>
+        {/* Actor / Movie Search */}
+        <div className="search-section">
+          <input
+            type="text"
+            placeholder="Search by actor or movie name..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <button onClick={fetchByQuery}>Search</button>
+        </div>
 
-        <button onClick={fetchByQuery}>Search</button>
+        {/* Genre Search */}
+        <div className="search-section">
+          <select
+            value={selectedGenre}
+            onChange={(e) => setSelectedGenre(e.target.value)}
+          >
+            <option value="">-- Select Genre --</option>
+            {Object.entries(genresList).map(([name, id]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+
+          <button onClick={fetchByGenre}>Search by Genre</button>
+        </div>
+
       </div>
 
+      {/* Movies Section */}
       {loading ? (
         <div className="loader">Loading...</div>
       ) : (
@@ -138,25 +180,44 @@ function App() {
                 ) : (
                   <div className="no-poster">No Poster</div>
                 )}
+
                 <div className="movie-info">
                   <h3>{movie.title}</h3>
-                  <p className="release">📅 Release Year: {movie.release_date?.slice(0, 4) || 'N/A'}</p>
-                  <p className="overview">{movie.overview || "No description available."}</p>
-                  <p>⭐ IMDB Rating: {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</p>
+                  <p className="release">
+                    📅 Release Year:{' '}
+                    {movie.release_date?.slice(0, 4) || 'N/A'}
+                  </p>
+                  <p className="overview">
+                    {movie.overview || "No description available."}
+                  </p>
+                  <p>
+                    ⭐ IMDB Rating:{' '}
+                    {movie.vote_average
+                      ? movie.vote_average.toFixed(1)
+                      : 'N/A'}
+                  </p>
                 </div>
               </div>
             ))
           )}
         </div>
       )}
-      <Chatbot onGenreSelect={(genreId) => {
-        setSelectedGenre(genreId);
-        setQuery('');
-        fetchByQuery(); 
-        }} 
+
+      {/* Chatbot */}
+      <Chatbot
+        onGenreSelect={(genreId) => {
+          setSelectedGenre(genreId);
+          setQuery('');
+          fetchByGenre();
+        }}
       />
+
+      {/* Footer */}
       <footer className="footer">
-        <p>&copy; {new Date().getFullYear()} Movie Recommender | Crafted with ❤️ by Harsh Raj and Team</p>
+        <p>
+          &copy; {new Date().getFullYear()} Movie Recommender | Crafted with ❤️
+          by Harsh Raj and Team
+        </p>
       </footer>
     </div>
   );
